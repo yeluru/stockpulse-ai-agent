@@ -1,0 +1,56 @@
+.search-bar input {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-bottom: 1rem;
+    box-sizing: border-box;
+  }
+  
+  .search-bar input:focus {
+    border-color: #0070f3;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 112, 243, 0.1);
+  }
+  
+  .results {
+    list-style: none;
+    padding: 0;
+    margin-top: 1.2rem;
+    max-height: none;
+    overflow: visible;
+  }
+  
+  .results li {
+    background: #f9fbfe;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    margin-bottom: 0.6rem;
+    display: flex;
+    align-items: center;
+    border: 1px solid #e2e8f0;
+    transition: background 0.2s ease;
+  }
+  
+  .results li:hover {
+    background-color: #eef6ff;
+  }
+  
+  .results label {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    font-size: 15px;
+    font-weight: 500;
+    color: #2b2b2b;
+  }
+  
+  .results input[type="checkbox"] {
+    margin-right: 12px;
+    width: 18px;
+    height: 18px;
+    accent-color: #0070f3;
+    cursor: pointer;
+  }
+  
