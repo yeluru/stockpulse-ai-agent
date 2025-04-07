@@ -1,4 +1,4 @@
-# 📈 StockPulse AI Agent (MVP)
+# StockPulse AI Agent (MVP)
 
 **StockPulse** is a fully serverless, AI-powered agent built using **Amazon Bedrock**, **React**, **DynamoDB**, **Lambda**, and **SES**. It allows users to select up to 5 favorite stocks or ETFs and receive daily AI-generated summaries in their email inbox.
 
@@ -6,7 +6,7 @@ This README provides **end-to-end setup instructions**, architectural context, a
 
 ---
 
-## 🧠 What You’ll Build
+## What You’ll Build
 
 - A modern React-based frontend for searching and selecting stocks
 - An API to collect user emails + stock preferences
@@ -17,11 +17,9 @@ This README provides **end-to-end setup instructions**, architectural context, a
 
 ---
 
-## 📌 Why Amazon Bedrock?
+## Use case
 
-Amazon Bedrock lets us call foundation models like **Claude** securely, without provisioning infrastructure or GPUs. It enables our stock agent to **reason over real-time data** — combining prices, volume, and recent headlines — to generate smart BUY / SELL / HOLD recommendations for each stock. Amazon Bedrock represents a major step forward in enabling developers to build AI-powered applications using foundation models without needing to manage infrastructure. While AWS users are familiar with services like Lambda, S3, API Gateway, and CloudFront, Bedrock is relatively new and still underexplored by most developers. The idea of AI agents—intelligent systems that can perceive, reason, and act—is also evolving beyond traditional chatbots.
-
-This makes the project a great real-world **AI Agent** use case. Imagine waking up each morning to an email in your inbox—not just a newsletter, but a smart research assistant that has already combed through stock data and breaking news to give you a personalized market briefing.
+Imagine waking up each morning to an email in your inbox—not just a newsletter, but a smart research assistant that has already combed through stock data and breaking news to give you a personalized market briefing.
 
 A real-time, AI-generated summary tailored to your favorite stocks—complete with market data, news, and a plain English recommendation like Buy, Sell, or Hold.
 
@@ -30,6 +28,12 @@ This is something you can build, today, using nothing but:
    - A dash of Python
    - Serverless AWS services
    - And the magic of Amazon Bedrock
+
+## Why Amazon Bedrock?
+
+Amazon Bedrock represents a major step forward in enabling developers to build AI-powered applications using foundation models without needing to manage infrastructure. While AWS users are familiar with services like Lambda, S3, API Gateway, and CloudFront, Bedrock is relatively new and still underexplored by most developers. The idea of AI agents—intelligent systems that can perceive, reason, and act—is also evolving beyond traditional chatbots. Amazon Bedrock lets us call foundation models like **Claude** securely, without provisioning infrastructure or GPUs. It enables our stock agent to **reason over real-time data** — combining prices, volume, and recent headlines — to generate smart BUY / SELL / HOLD recommendations for each stock.
+
+This makes the project a great real-world **AI Agent** use case. 
 
 ---
 
