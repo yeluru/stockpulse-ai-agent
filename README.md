@@ -19,9 +19,17 @@ This README provides **end-to-end setup instructions**, architectural context, a
 
 ## 📌 Why Amazon Bedrock?
 
-Amazon Bedrock lets us call foundation models like **Claude** securely, without provisioning infrastructure or GPUs. It enables our stock agent to **reason over real-time data** — combining prices, volume, and recent headlines — to generate smart BUY / SELL / HOLD recommendations for each stock.
+Amazon Bedrock lets us call foundation models like **Claude** securely, without provisioning infrastructure or GPUs. It enables our stock agent to **reason over real-time data** — combining prices, volume, and recent headlines — to generate smart BUY / SELL / HOLD recommendations for each stock. Amazon Bedrock represents a major step forward in enabling developers to build AI-powered applications using foundation models without needing to manage infrastructure. While AWS users are familiar with services like Lambda, S3, API Gateway, and CloudFront, Bedrock is relatively new and still underexplored by most developers. The idea of AI agents—intelligent systems that can perceive, reason, and act—is also evolving beyond traditional chatbots.
 
-This makes the project a great real-world **AI Agent** use case.
+This makes the project a great real-world **AI Agent** use case. Imagine waking up each morning to an email in your inbox—not just a newsletter, but a smart research assistant that has already combed through stock data and breaking news to give you a personalized market briefing.
+
+A real-time, AI-generated summary tailored to your favorite stocks—complete with market data, news, and a plain English recommendation like Buy, Sell, or Hold.
+
+This is something you can build, today, using nothing but:
+   - A bit of React and JavaScript
+   - A dash of Python
+   - Serverless AWS services
+   - And the magic of Amazon Bedrock
 
 ---
 
