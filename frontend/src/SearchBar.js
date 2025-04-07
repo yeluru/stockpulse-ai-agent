@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './SearchBar.css';
 
-const API_KEY = '9bOKQF4VqLD5XTdoe1bOIO4U5YST9Pei';
+const API_KEY = '<FMP_API_KEY>';
 const MAX_SELECTION = 5;
 
 function SearchBar({ selectedSymbols, setSelectedSymbols, resetTrigger }) {

@@ -11,8 +11,8 @@ ses = boto3.client('ses')
 bedrock = boto3.client('bedrock-runtime', region_name='us-east-1')
 
 # Config
-FMP_API_KEY = "9bOKQF4VqLD5XTdoe1bOIO4U5YST9Pei"
-NEWS_API_KEY = "4722bac4ea094d0f9f10366b932f4ece"
+FMP_API_KEY = "<YOUR_FMP_API_KEY>"
+NEWS_API_KEY = "<YOUR_NEWS_API_KEY>"
 DDB_TABLE = "StockPulseSubscriptions"
 MODEL_ID = "anthropic.claude-instant-v1"
 FROM_EMAIL = "raviyeluru@compsciprep.com"
@@ -107,7 +107,7 @@ def format_section(symbol, price, volume, headlines, summary):
     """
 
 def send_email(to, body_html):
-    unsubscribe_link = f"https://d2hofsiu8f743.cloudfront.net/unsubscribe?email={to}"
+    unsubscribe_link = f"https://<YOUR_CLOUDFRONT_ID>.cloudfront.net/unsubscribe?email={to}"
 
     ses.send_email(
         Source=FROM_EMAIL,

@@ -20,7 +20,7 @@ function App() {
       console.log("📧 Extracted email param:", emailParam);
 
       if (emailParam) {
-        fetch(`https://0x64izvalf.execute-api.us-east-1.amazonaws.com/unsubscribe?email=${encodeURIComponent(emailParam)}`)
+        fetch(`https://<YOUR_API_ID>.execute-api.us-east-1.amazonaws.com/unsubscribe?email=${encodeURIComponent(emailParam)}`)
           .then(res => {
             console.log("📡 Fetch sent. Response status:", res.status);
             if (!res.ok) throw new Error('Failed to unsubscribe');
@@ -72,7 +72,7 @@ function App() {
     const payload = { email, symbols: selectedSymbols };
 
     try {
-      const res = await fetch('https://0x64izvalf.execute-api.us-east-1.amazonaws.com/subscribe', {
+      const res = await fetch('https://<YOUR_API_ID>.execute-api.us-east-1.amazonaws.com/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
