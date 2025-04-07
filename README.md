@@ -1,6 +1,6 @@
 # 📈 StockPulse AI Agent (MVP)
 
-**StockPulse** is a fully serverless, AI-powered agent built using **Amazon Bedrock**, **React**, **DynamoDB**, **Lambda**, and **SES**. It allows users to select up to 10 favorite stocks or ETFs and receive daily AI-generated summaries in their email inbox.
+**StockPulse** is a fully serverless, AI-powered agent built using **Amazon Bedrock**, **React**, **DynamoDB**, **Lambda**, and **SES**. It allows users to select up to 5 favorite stocks or ETFs and receive daily AI-generated summaries in their email inbox.
 
 This README provides **end-to-end setup instructions**, architectural context, and coding decisions — so developers can understand **what, why, and how** to build similar AI agents.
 
