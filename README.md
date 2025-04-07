@@ -165,19 +165,31 @@ stockpulse-ai-agent/
 ### External API keys.
 
 1. Fetch Real Stock Data from API
+
 We'll use the Financial Modeling Prep (FMP) API (free, simple, no credit card required).
 
+
 ✅ Step 4.1: Get Free API Key from FMP
+
 Go to https://site.financialmodelingprep.com
+
 Click Get your free API key (top right)
+
 Sign up & verify email
+
 Copy your API Key in the code, SearchBar.js where there is a place holder
 
+
 2.  Get a NewsAPI Key
+
 Go to https://newsapi.org/register
+
 Sign up for a free developer account
+
 Verify your email
+
 Grab your API key and copy in the code where there is a place holder
+
 
 It allows 100 requests/day, and supports stock/company search with q= (like Tesla, Apple, etc.)
 
