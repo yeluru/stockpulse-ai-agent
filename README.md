@@ -45,22 +45,30 @@ This makes the project a great real-world **AI Agent** use case.
 graph TD
   User[User selects stocks + email]
   Frontend[React Frontend]
-  APIGW[API Gateway /subscribe]
+  APISubscribe[API Gateway /subscribe]
   LambdaStore[Lambda: storeSubscription]
   DynamoDB[(DynamoDB)]
-  EventBridge[EventBridge Trigger (Daily)]
+  
+  EventBridge[EventBridge: Daily Trigger]
   LambdaDaily[Lambda: stockPulseRunner]
   FMPAPI[FMP API]
   NewsAPI[News API]
-  Bedrock[Claude Model (Bedrock)]
+  Bedrock[Claude - Amazon Bedrock]
   SES[Amazon SES]
-  Email[Personalized Email]
+  Email[📬 Personalized Email]
+  
+  UnsubscribeLink[🔗 Unsubscribe Link]
+  APIUnsubscribe[API Gateway /unsubscribe]
+  LambdaUnsub[Lambda: deleteSubscription]
+  UnsubUI[Unsubscribe UI Feedback]
 
+  %% Subscription Flow
   User --> Frontend
-  Frontend --> APIGW
-  APIGW --> LambdaStore
+  Frontend --> APISubscribe
+  APISubscribe --> LambdaStore
   LambdaStore --> DynamoDB
 
+  %% Daily Processing
   EventBridge --> LambdaDaily
   LambdaDaily --> DynamoDB
   LambdaDaily --> FMPAPI
@@ -68,6 +76,15 @@ graph TD
   LambdaDaily --> Bedrock
   LambdaDaily --> SES
   SES --> Email
+
+  %% Unsubscribe Flow
+  Email --> UnsubscribeLink
+  UnsubscribeLink --> Frontend
+  Frontend --> APIUnsubscribe
+  APIUnsubscribe --> LambdaUnsub
+  LambdaUnsub --> DynamoDB
+  LambdaUnsub --> UnsubUI
+
 ```
 
 ---
