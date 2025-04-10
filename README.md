@@ -52,6 +52,9 @@ This guide walks you through **end-to-end setup using AWS Console only**, explai
 
 ---
 
+![image](https://github.com/user-attachments/assets/a46ecd71-946d-421c-b05c-90344255289c)
+
+
 ## 🧱 Architecture Diagram
 
 ```mermaid
