@@ -1,57 +1,38 @@
-# StockPulse AI Agent (MVP)
+# 📈 StockPulse AI Agent (MVP)
 
-**StockPulse** is a fully serverless, AI-powered agent built using **Amazon Bedrock**, **React**, **DynamoDB**, **Lambda**, and **SES**. It allows users to select up to 5 favorite stocks or ETFs and receive daily AI-generated summaries in their email inbox.
+StockPulse is a **fully serverless AI-powered stock research agent**. It uses Amazon Bedrock to generate AI insights, allows users to subscribe to their favorite stocks, and emails them daily AI-generated summaries using Claude.
 
-This README provides **end-to-end setup instructions**, architectural context, and coding decisions — so developers can understand **what, why, and how** to build similar AI agents.
-
----
-
-## What You’ll Build
-
-- A modern React-based frontend for searching and selecting stocks
-- An API to collect user emails + stock preferences
-- A scheduled backend job (via Lambda + EventBridge)
-- Dynamic email generation using **Claude via Amazon Bedrock**
-- A clean **unsubscribe mechanism** with link handling via CloudFront
-- Fully deployed using **AWS services**, no backend servers required
+This guide walks you through **end-to-end setup using AWS Console only**, explaining all critical configurations and common gotchas so you can deploy confidently.
 
 ---
 
-## Use case
+## 🚀 What You’ll Build
 
-Imagine waking up each morning to an email in your inbox—not just a newsletter, but a smart research assistant that has already combed through stock data and breaking news to give you a personalized market briefing.
-
-A real-time, AI-generated summary tailored to your favorite stocks—complete with market data, news, and a plain English recommendation like Buy, Sell, or Hold.
-
-This is something you can build, today, using nothing but:
-   - A bit of React and JavaScript
-   - A dash of Python
-   - Serverless AWS services
-   - And the magic of Amazon Bedrock
-
-## Why Amazon Bedrock?
-
-Amazon Bedrock represents a major step forward in enabling developers to build AI-powered applications using foundation models without needing to manage infrastructure. While AWS users are familiar with services like Lambda, S3, API Gateway, and CloudFront, Bedrock is relatively new and still underexplored by most developers. The idea of AI agents—intelligent systems that can perceive, reason, and act—is also evolving beyond traditional chatbots. Amazon Bedrock lets us call foundation models like **Claude** securely, without provisioning infrastructure or GPUs. It enables our stock agent to **reason over real-time data** — combining prices, volume, and recent headlines — to generate smart BUY / SELL / HOLD recommendations for each stock.
-
-This makes the project a great real-world **AI Agent** use case. 
+- A modern React frontend (hosted via **S3 + CloudFront**)
+- Email + stock preferences stored in **DynamoDB**
+- API Gateway triggers two Lambdas for subscribe/unsubscribe
+- Daily analysis powered by **Claude (Amazon Bedrock)**
+- **Emails sent via Amazon SES**
+- A fully working unsubscribe flow
+- No backend servers required
 
 ---
 
-## 🔧 Tech Stack Overview
+## 🧰 Tech Stack
 
-| Component     | Technology                     |
-|--------------|---------------------------------|
-| Frontend      | React (S3 + CloudFront)         |
-| Backend       | AWS Lambda (Python)             |
-| Storage       | DynamoDB                        |
-| LLM           | Claude via Amazon Bedrock       |
-| External APIs | FinancialModelingPrep, NewsAPI  |
-| Email Service | Amazon SES                      |
-| Auth/Trigger  | API Gateway, EventBridge        |
+| Component     | Tech                          |
+|--------------|-------------------------------|
+| Frontend      | React (S3 + CloudFront)        |
+| Backend       | AWS Lambda (Python)            |
+| APIs          | API Gateway (HTTP API)         |
+| Data Store    | DynamoDB                       |
+| Email         | Amazon SES                     |
+| AI Model      | Claude (via Amazon Bedrock)    |
+| Scheduler     | Amazon EventBridge             |
 
 ---
 
-## 🖼️ Architecture Diagram
+## 🧱 Architecture Diagram
 
 ```mermaid
 graph TD
@@ -96,223 +77,257 @@ graph TD
   APIUnsubscribe --> LambdaUnsub
   LambdaUnsub --> DynamoDB
   LambdaUnsub --> UnsubUI
-
 ```
 
 ---
 
-## 🚀 How It Works (End-to-End Flow)
+## 🛠️ Frontend Deployment (S3 + CloudFront)
 
-1. **User Search & Selects Stocks**  
-   Using the [FMP API](https://financialmodelingprep.com/developer/docs/), users can search by company name or ticker.
-
-2. **Enter Email**  
-   Once 1 or more stocks are selected, the user provides an email to receive insights.
-
-3. **Store Subscription**  
-   Data is sent via API Gateway to a Lambda (`storeSubscription`), which stores the info in DynamoDB.
-
-4. **Daily Scheduled Agent**  
-   Another Lambda (`stockPulseRunner`) runs daily via EventBridge:
-   - Fetches user subscriptions
-   - Gets live stock price, volume, and news
-   - Prompts Claude for reasoning
-   - Sends via SES
-
-5. **Unsubscribe Support**  
-   Every email has an unsubscribe link. Clicking it calls a Lambda that deletes the email from DynamoDB and shows a confirmation message.
-
----
-
-## 💻 Code Structure
+### 1. Build React App
 
 ```bash
-stockpulse-ai-agent/
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── App.js
-│   │   ├── App.css
-│   │   ├── SearchBar.js
-│   │   ├── SearchBar.css
-│   │   └── ...
-│   └── package.json
-├── lambdas/
-│   ├── storeSubscription.py
-│   ├── stockPulseRunner.py
-│   └── unsubscribeUser.py
-└── README.md
+cd frontend
+npm install
+npm run build
+```
+
+### 2. Create S3 Bucket
+
+1. Go to **AWS Console → S3 → Create bucket**
+2. Uncheck “Block all public access”
+3. Name it `stockpulse-ui` or similar
+4. Region: e.g., `us-east-1`
+5. Click **Create**
+
+### 3. Enable Static Website Hosting
+
+1. Open the bucket → **Properties**
+2. Scroll to **Static website hosting**
+3. Enable it
+4. Set:
+   - Index document: `index.html`
+   - Error document: `index.html`
+5. Save
+
+### 4. Make Public
+
+Go to **Permissions → Bucket policy**, and paste:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": "*",
+    "Action": "s3:GetObject",
+    "Resource": "arn:aws:s3:::your-bucket-name/*"
+  }]
+}
+```
+
+### 5. Upload Files
+
+Upload the **contents of `build/`**, not the folder itself.
+
+### 6. Create CloudFront Distribution
+
+1. Go to **CloudFront → Create distribution**
+2. Origin domain = your **S3 website endpoint** (e.g., `s3-website-us-east-1.amazonaws.com`)
+   > 💡 *Don’t choose the default S3 origin suggestion — it won’t work for static sites.*
+3. Default root object: `index.html`
+4. Click **Create Distribution**
+
+### 7. Test
+
+Use the CloudFront domain (e.g. `https://d1234abc.cloudfront.net`) to load your app.
+
+Update unsubscribe links to use this domain in `App.js`.
+
+---
+
+## 🌐 API Gateway + Lambda (Subscribe & Unsubscribe)
+
+### 1. Create HTTP API
+
+Go to **API Gateway → Create API → HTTP API**
+
+- Add two routes:
+  - `POST /subscribe`
+  - `GET /unsubscribe`
+
+### 2. Connect Lambdas
+
+For each route:
+- Click the route
+- Choose **Attach integration**
+- Select the Lambda (`storeSubscription` or `unsubscribeUser`)
+- Confirm and deploy
+
+### 3. Enable CORS (Manually via Lambda)
+
+> 💡 *CORS does NOT show in API Gateway console for HTTP APIs. It must be handled inside your Lambda.*
+
+Inside your Lambda, check for OPTIONS and return CORS headers:
+
+```python
+if event['requestContext']['http']['method'] == 'OPTIONS':
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Headers': 'Content-Type'
+        },
+        'body': ''
+    }
+```
+
+Add same headers to all `200 OK` responses too.
+
+---
+
+## 🗃️ DynamoDB Configuration
+
+1. Go to **DynamoDB → Create Table**
+2. Table name: `StockPulseSubscriptions`
+3. Partition key: `email` (type: String)
+4. Choose **On-Demand capacity**
+5. Click **Create table**
+
+---
+
+## 📩 Amazon SES Setup
+
+1. Go to **Amazon SES → Verified identities**
+2. Click **Create identity → Email address**
+3. Add your sender email (e.g., `yourname@domain.com`)
+4. Confirm verification email
+
+💡 SES starts in **sandbox mode**:
+- You can only send emails to verified recipients.
+- Request **production access** to remove this limitation.
+
+---
+
+## 🧠 Amazon Bedrock Setup
+
+1. Go to **Amazon Bedrock Console**
+2. Under **Model Access**, ensure `Claude` is enabled
+3. In your Lambda, use:
+
+```python
+import boto3
+bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
 ```
 
 ---
 
-## 🛠️ Frontend Setup (React)
+## ⏰ EventBridge (Schedule Daily Job)
 
-> Full source: `frontend/src/App.js`, `SearchBar.js`, and `App.css`
+1. Go to **Amazon EventBridge → Rules → Create rule**
+2. Name it `DailyStockPulse`
+3. Choose **Schedule → cron expression**
 
-1. Clone repo:
-   ```bash
-   git clone https://github.com/yeluru/stockpulse-ai-agent.git
-   cd stockpulse-ai-agent/frontend
-   ```
+Example (8am EST):
+```
+cron(0 13 * * ? *)
+```
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Run locally:
-   ```bash
-   npm start
-   ```
-
-4. Configure:
-   - In `SearchBar.js`, replace `API_KEY` with your FMP key
-   - Update unsubscribe CloudFront URL in `App.js` if changed
+4. Target → Lambda → `stockPulseRunner`
+5. Click **Create**
 
 ---
 
-## 🔄 API Key Setup
+## 🔐 IAM Permissions (Lambdas)
 
-### External API keys.
+### storeSubscription
 
-1. Fetch Real Stock Data from API
+```json
+{
+  "Effect": "Allow",
+  "Action": ["dynamodb:PutItem"],
+  "Resource": "arn:aws:dynamodb:us-east-1:<account-id>:table/StockPulseSubscriptions"
+}
+```
 
-We'll use the Financial Modeling Prep (FMP) API (free, simple, no credit card required).
+### unsubscribeUser
 
-   - Get Free API Key from FMP
-   - Go to https://site.financialmodelingprep.com
-   - Click Get your free API key (top right)
-   - Sign up & verify email
+```json
+{
+  "Effect": "Allow",
+  "Action": ["dynamodb:DeleteItem"],
+  "Resource": "arn:aws:dynamodb:us-east-1:<account-id>:table/StockPulseSubscriptions"
+}
+```
 
-Copy your API Key in the code, SearchBar.js where there is a place holder
+### stockPulseRunner
 
-
-2.  Get a NewsAPI Key
-
-Go to https://newsapi.org/register
-   - Sign up for a free developer account
-   - Verify your email
-   - Grab your API key and copy in the code where there is a place holder
-
-It allows 100 requests/day, and supports stock/company search with q= (like Tesla, Apple, etc.)
-
-### A. DynamoDB Table
-
-1. Go to [AWS DynamoDB Console](https://console.aws.amazon.com/dynamodb/)
-2. Create table:
-   - Name: `StockPulseSubscriptions`
-   - Partition key: `email` (type: String)
-   - Capacity: On-Demand
-
-### B. Lambda: `storeSubscription.py`
-
-> Source: `lambdas/storeSubscription.py`
-
-- Stores `{ email, symbols[] }` to DynamoDB
-- Integrated via API Gateway POST `/subscribe`
-
-### C. Lambda: `stockPulseRunner.py`
-
-> Source: `lambdas/stockPulseRunner.py`
-
-- Scheduled daily via EventBridge
-- Reads from DynamoDB
-- Fetches stock data via:
-  - FMP quote-short endpoint
-  - NewsAPI headlines
-- Constructs prompt per stock:
-  > "Given TSLA dropped 7.8% and the headline 'Tesla delivery misses estimates', what should I do?"
-- Uses Claude (via Bedrock) for reasoning
-- Sends personalized emails via SES
-
-### D. Lambda: `unsubscribeUser.py`
-
-> Source: `lambdas/unsubscribeUser.py`
-
-- Triggered via GET `/unsubscribe?email=...`
-- Deletes user from DynamoDB
-- Returns HTML confirmation
+```json
+{
+  "Effect": "Allow",
+  "Action": [
+    "dynamodb:Scan",
+    "bedrock:InvokeModel",
+    "ses:SendEmail"
+  ],
+  "Resource": "*"
+}
+```
 
 ---
 
-## 📤 Email Format
+## 🧪 Testing
 
-Each daily email includes:
+### Subscribe
+```bash
+curl -X POST https://<api-id>.execute-api.us-east-1.amazonaws.com/subscribe \
+-H "Content-Type: application/json" \
+-d '{"email": "test@example.com", "symbols": ["TSLA", "GOOG"]}'
+```
 
-- Stock symbol, price, volume
-- Top news headlines
-- Claude-generated AI insight
-- Unsubscribe link (e.g. `https://your-cloudfront/unsubscribe?email=...`)
-
-📂 Sample email format included in `stockPulseRunner.py`.
-
----
-
-## 🔐 Security & Permissions
-
-### IAM Roles
-- `storeSubscription` → `dynamodb:PutItem`
-- `stockPulseRunner` → `dynamodb:Scan`, `bedrock:InvokeModel`, `ses:SendEmail`
-- `unsubscribeUser` → `dynamodb:DeleteItem`
-
-### CORS
-- Configured on API Gateway `/subscribe` endpoint
-- Headers:
-  ```http
-  Access-Control-Allow-Origin: *
-  Access-Control-Allow-Methods: POST, OPTIONS
-  Access-Control-Allow-Headers: Content-Type
-  ```
+### Unsubscribe
+```bash
+curl "https://<api-id>.execute-api.us-east-1.amazonaws.com/unsubscribe?email=test@example.com"
+```
 
 ---
 
-## 🧪 Dev Tips
+## 🧠 Common Gotchas
 
-- 🧪 Test unsubscribe via:
-  ```bash
-  curl "https://your-api/unsubscribe?email=test@example.com"
-  ```
-- 🧪 Email sandbox users must be verified unless SES is out of sandbox
-- 🧪 Test daily Lambda with dummy email (log output to CloudWatch)
+- **CORS not working?**  
+  You must handle OPTIONS requests in Lambda; there's no visual CORS config in HTTP API.
 
----
+- **CloudFront returns XML error?**  
+  You selected the wrong S3 origin. Use the **website hosting endpoint**.
 
-## ✅ Deployment Steps (Frontend)
+- **App loads blank screen?**  
+  Check if you uploaded the entire `build/` folder or just its contents.
 
-1. Build static site:
-   ```bash
-   npm run build
-   ```
+- **Email not sent?**  
+  SES is in sandbox mode. Only verified emails can be recipients.
 
-2. Upload `build/` folder to an S3 bucket
+- **Unsubscribe link not working?**  
+  Ensure you deployed the unsubscribe Lambda and URL matches CloudFront.
 
-3. Use CloudFront to serve public-facing domain
-
-4. Ensure URL used in unsubscribe link matches CloudFront domain
+- **Bedrock returns access denied?**  
+  Check IAM role has `bedrock:InvokeModel` and model is enabled under access.
 
 ---
 
-## 💡 Lessons Learned
+## ✅ Final Deployment Checklist
 
-- React hooks **must** follow consistent render order (no conditionals)
-- SES **sandbox limits** only allow verified emails initially
-- Bedrock has **rate limits** — avoid excessive parallel calls
-- Ensure proper IAM permissions for each Lambda
-
----
-
-## 🔭 What’s Next
-
-- [ ] Track past email insights per user
-- [ ] Let user configure delivery time
-- [ ] Extend to SMS / WhatsApp using SNS
-- [ ] Use Bedrock Agents when GA
-- [ ] Host full-stack version on Amplify or SST
+- [x] React frontend deployed via S3 + CloudFront
+- [x] Subscribe + Unsubscribe endpoints deployed
+- [x] Lambdas connected to API Gateway
+- [x] CORS handled inside Lambda
+- [x] DynamoDB table created
+- [x] Daily trigger scheduled via EventBridge
+- [x] Claude model access confirmed
+- [x] Emails sent via verified SES sender
+- [x] Unsubscribe deletes record from DynamoDB
 
 ---
 
 ## 📌 GitHub Repo
 
-📂 Browse full source here:  
 ➡️ https://github.com/yeluru/stockpulse-ai-agent
