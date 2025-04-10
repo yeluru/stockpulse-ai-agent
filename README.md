@@ -1,18 +1,32 @@
-# Build a Serverless AI Agent Using AWS resources including Bedrock— End to End
+# 🤖 Build a Fully Serverless AI Agent on AWS Using Amazon Bedrock
 
-You’ve probably heard about Amazon Bedrock by now. AWS’s new fully managed service lets you tap into powerful foundation models like Claude, Titan, and Jurassic — without managing GPUs, infrastructure, or model hosting. 
+You’ve probably heard about **Amazon Bedrock** by now. AWS’s fully managed service gives you easy access to state-of-the-art foundation models like Claude, Titan, and Jurassic — without ever touching GPUs, infrastructure, or container hosting.
 
-If you’ve been curious about Amazon Bedrock, this project is for you. We’re going to build a real AI agent — not a chatbot, but an automated reasoning system that pulls live stock data, analyzes news headlines, generates daily recommendations using Claude, and delivers personalized insights to users via email. And we’ll do it entirely serverless: no backend servers, no EC2, no provisioning — just S3, Lambda, API Gateway, DynamoDB, EventBridge, and SES working together. Bedrock lets us tap into cutting-edge LLMs with zero infrastructure, and serverless architecture ensures we only pay for what we use. The result? A production-grade AI agent that runs daily, scales on demand, and is cheap, elegant, and surprisingly easy to deploy. By the end, you’ll understand how to wire Bedrock into a full-stack system, build a clean user experience, and ship something you’d be proud to show your future self.
+In this project, we’ll show you how to use Bedrock not just to generate text, but to build a **real AI agent**: one that collects live stock data, analyzes financial news, reasons over that data using Claude, and emails daily personalized insights to users — entirely autonomously.
 
-## StockPulse AI Agent (MVP)
+We’ll build everything using **fully serverless AWS services**:
+- S3 and CloudFront for hosting
+- API Gateway + Lambda for backend logic
+- DynamoDB for user preferences
+- EventBridge for daily automation
+- SES for email delivery
+- Bedrock for LLM-powered reasoning
+
+The result? A production-grade AI agent that’s cost-efficient, scalable, and simple to manage — no EC2, no servers, no infrastructure headaches.
+
+---
+
+## 📦 StockPulse AI Agent (MVP)
 
 StockPulse is a **fully serverless AI-powered stock research agent**. It uses Amazon Bedrock to generate AI insights, allows users to subscribe to their favorite stocks, and emails them daily AI-generated summaries using Claude.
 
 This guide walks you through **end-to-end setup using AWS Console only**, explaining all critical configurations and common gotchas so you can deploy confidently.
 
+> 🧪 Everything you build here is serverless, automated, and event-driven — no backend infrastructure to manage.
+
 ---
 
-## What You’ll Build
+## ✅ What You’ll Build
 
 - A modern React frontend (hosted via **S3 + CloudFront**)
 - Email + stock preferences stored in **DynamoDB**
@@ -24,7 +38,7 @@ This guide walks you through **end-to-end setup using AWS Console only**, explai
 
 ---
 
-## Tech Stack
+## 🧰 Tech Stack
 
 | Component     | Tech                          |
 |--------------|-------------------------------|
@@ -38,7 +52,7 @@ This guide walks you through **end-to-end setup using AWS Console only**, explai
 
 ---
 
-## Architecture Diagram
+## 🧱 Architecture Diagram
 
 ```mermaid
 graph TD
@@ -87,9 +101,9 @@ graph TD
 
 ---
 
-##  Frontend Deployment (S3 + CloudFront)
+## 🧑‍💻 React Frontend Setup
 
-### 1. Build React App
+### 1. Build the React App
 
 ```bash
 cd frontend
@@ -97,27 +111,41 @@ npm install
 npm run build
 ```
 
-### 2. Create S3 Bucket
+This generates a production-ready build in the `build/` directory.
 
-1. Go to **AWS Console → S3 → Create bucket**
-2. Uncheck “Block all public access”
-3. Name it `stockpulse-ui` or similar
-4. Region: e.g., `us-east-1`
-5. Click **Create**
+---
 
-### 3. Enable Static Website Hosting
+## 🪣 Deploy Frontend on S3
 
-1. Open the bucket → **Properties**
-2. Scroll to **Static website hosting**
-3. Enable it
-4. Set:
-   - Index document: `index.html`
-   - Error document: `index.html`
-5. Save
+### 1. Create S3 Bucket
 
-### 4. Make Public
+- Go to AWS Console → **S3**
+- Click **Create bucket**
+- Give it a unique name (e.g., `stockpulse-ui`)
+- Uncheck **Block all public access**
+- Click **Create bucket**
 
-Go to **Permissions → Bucket policy**, and paste:
+### 2. Enable Static Website Hosting
+
+- Click your new bucket → **Properties**
+- Scroll to **Static website hosting**
+- Click **Edit**
+- Enable hosting
+- Set:
+  - **Index document**: `index.html`
+  - **Error document**: `index.html`
+- Click **Save changes**
+
+### 3. Upload React Build
+
+- Go to the bucket → **Objects**
+- Click **Upload**
+- Upload **contents of `build/`**, NOT the `build/` folder itself
+- Click **Upload**
+
+### 4. Make Bucket Public
+
+Go to **Permissions → Bucket policy**, paste:
 
 ```json
 {
@@ -126,125 +154,138 @@ Go to **Permissions → Bucket policy**, and paste:
     "Effect": "Allow",
     "Principal": "*",
     "Action": "s3:GetObject",
-    "Resource": "arn:aws:s3:::your-bucket-name/*"
+    "Resource": "arn:aws:s3:::stockpulse-ui/*"
   }]
 }
 ```
 
-### 5. Upload Files
-
-Upload the **contents of `build/`**, not the folder itself.
-
-### 6. Create CloudFront Distribution
-
-1. Go to **CloudFront → Create distribution**
-2. Origin domain = your **S3 website endpoint** (e.g., `s3-website-us-east-1.amazonaws.com`)
-   > 💡 *Don’t choose the default S3 origin suggestion — it won’t work for static sites.*
-3. Default root object: `index.html`
-4. Click **Create Distribution**
-
-### 7. Test
-
-Use the CloudFront domain (e.g. `https://d1234abc.cloudfront.net`) to load your app.
-
-Update unsubscribe links to use this domain in `App.js`.
+Replace `stockpulse-ui` with your bucket name.
 
 ---
 
-## 🌐 API Gateway + Lambda (Subscribe & Unsubscribe)
+## 🌍 Set Up CloudFront
 
-### 1. Create HTTP API
+### 1. Create Distribution
 
-Go to **API Gateway → Create API → HTTP API**
+- Go to **CloudFront → Create distribution**
+- Origin domain → Manually type in the **S3 static website endpoint** (e.g., `stockpulse-ui.s3-website-us-east-1.amazonaws.com`)
+  > 💡 *Do not select from dropdown. That adds S3 as origin, not the static website endpoint.*
 
-- Add two routes:
+- Set **Default root object** = `index.html`
+- Leave everything else default
+- Click **Create distribution**
+
+### 2. Test
+
+Open the CloudFront domain (e.g., `https://d1234.cloudfront.net`)  
+You should see the app load.
+
+---
+
+## 🛣️ API Gateway Setup (Subscribe & Unsubscribe)
+
+### 1. Go to **API Gateway → Create API → HTTP API**
+
+- Name: `StockPulse API`
+- Select **Add routes manually**
+- Add 2 routes:
   - `POST /subscribe`
   - `GET /unsubscribe`
 
-### 2. Connect Lambdas
+### 2. Create 2 Lambda Functions
 
-For each route:
-- Click the route
-- Choose **Attach integration**
-- Select the Lambda (`storeSubscription` or `unsubscribeUser`)
-- Confirm and deploy
+In **AWS Console → Lambda**:
 
-### 3. Enable CORS (Manually via Lambda)
+- `storeSubscription` (POST handler)
+- `unsubscribeUser` (GET handler)
 
-> 💡 *CORS does NOT show in API Gateway console for HTTP APIs. It must be handled inside your Lambda.*
+Use code from the repo: `lambdas/storeSubscription.py`, `unsubscribeUser.py`
 
-Inside your Lambda, check for OPTIONS and return CORS headers:
+### 3. Attach Lambdas to API
+
+- In API Gateway, click each route
+- Click **Attach integration**
+- Choose Lambda → Select appropriate function
+- Click **Deploy**
+
+---
+
+## 🌐 CORS Configuration (Manually via Lambda)
+
+HTTP APIs don’t show CORS options in the console. You must handle it inside your Lambda.
+
+In both Lambdas, include this block:
 
 ```python
-if event['requestContext']['http']['method'] == 'OPTIONS':
+if event.get("requestContext", {}).get("http", {}).get("method") == "OPTIONS":
     return {
         'statusCode': 200,
         'headers': {
             'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'POST, OPTIONS',
+            'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
             'Access-Control-Allow-Headers': 'Content-Type'
         },
         'body': ''
     }
 ```
 
-Add same headers to all `200 OK` responses too.
+Also, add `Access-Control-Allow-Origin: *` to **all responses**.
 
 ---
 
-## DynamoDB Configuration
+## 🧾 DynamoDB Setup
 
-1. Go to **DynamoDB → Create Table**
-2. Table name: `StockPulseSubscriptions`
+1. Go to **DynamoDB → Create table**
+2. Name: `StockPulseSubscriptions`
 3. Partition key: `email` (type: String)
-4. Choose **On-Demand capacity**
-5. Click **Create table**
+4. Capacity mode: **On-demand**
+5. Click **Create**
 
 ---
 
-## Amazon SES Setup
+## 📬 Amazon SES Setup
 
-1. Go to **Amazon SES → Verified identities**
-2. Click **Create identity → Email address**
-3. Add your sender email (e.g., `yourname@domain.com`)
-4. Confirm verification email
-
- SES starts in **sandbox mode**:
-- You can only send emails to verified recipients.
-- Request **production access** to remove this limitation.
+1. Go to **SES → Verified Identities**
+2. Click **Create identity**
+3. Select **Email address** (e.g., `yourname@domain.com`)
+4. Follow email verification
+5. If still in sandbox:
+   - You can only send to verified addresses
+   - Go to SES → **Account Dashboard** → Click **Request Production Access**
 
 ---
 
-## Amazon Bedrock Setup
+## 🧠 Amazon Bedrock Setup
 
-1. Go to **Amazon Bedrock Console**
-2. Under **Model Access**, ensure `Claude` is enabled
-3. In your Lambda, use:
+1. Open **Amazon Bedrock Console**
+2. Go to **Model access**
+3. Ensure `Claude (Anthropic)` is enabled
+4. In your Lambda (`stockPulseRunner`), call it using:
 
 ```python
 import boto3
 bedrock = boto3.client("bedrock-runtime", region_name="us-east-1")
 ```
 
+Use `invoke_model(...)` to call Claude
+
 ---
 
-## EventBridge (Schedule Daily Job)
+## ⏰ EventBridge Scheduler
 
-1. Go to **Amazon EventBridge → Rules → Create rule**
-2. Name it `DailyStockPulse`
-3. Choose **Schedule → cron expression**
-
-Example (8am EST):
+1. Go to **EventBridge → Rules → Create rule**
+2. Name it `DailyStockPulseRunner`
+3. Rule type: **Schedule**
+4. Cron expression for 8AM EST:
 ```
 cron(0 13 * * ? *)
 ```
-
-4. Target → Lambda → `stockPulseRunner`
-5. Click **Create**
+5. Add target: Lambda → `stockPulseRunner`
+6. Click **Create rule**
 
 ---
 
-## IAM Permissions (Lambdas)
+## 🔐 IAM Role Permissions
 
 ### storeSubscription
 
@@ -282,58 +323,47 @@ cron(0 13 * * ? *)
 
 ---
 
-## Testing
+## 🧪 API Testing
 
 ### Subscribe
 ```bash
 curl -X POST https://<api-id>.execute-api.us-east-1.amazonaws.com/subscribe \
 -H "Content-Type: application/json" \
--d '{"email": "test@example.com", "symbols": ["TSLA", "GOOG"]}'
+-d '{"email": "user@example.com", "symbols": ["TSLA", "AAPL"]}'
 ```
 
 ### Unsubscribe
 ```bash
-curl "https://<api-id>.execute-api.us-east-1.amazonaws.com/unsubscribe?email=test@example.com"
+curl "https://<api-id>.execute-api.us-east-1.amazonaws.com/unsubscribe?email=user@example.com"
 ```
 
 ---
 
-## Common Gotchas
+## 🧠 Common Gotchas
 
-- **CORS not working?**  
-  You must handle OPTIONS requests in Lambda; there's no visual CORS config in HTTP API.
-
-- **CloudFront returns XML error?**  
-  You selected the wrong S3 origin. Use the **website hosting endpoint**.
-
-- **App loads blank screen?**  
-  Check if you uploaded the entire `build/` folder or just its contents.
-
-- **Email not sent?**  
-  SES is in sandbox mode. Only verified emails can be recipients.
-
-- **Unsubscribe link not working?**  
-  Ensure you deployed the unsubscribe Lambda and URL matches CloudFront.
-
-- **Bedrock returns access denied?**  
-  Check IAM role has `bedrock:InvokeModel` and model is enabled under access.
+| Problem                             | Fix/Explanation |
+|-------------------------------------|-----------------|
+| CloudFront shows XML error          | You used S3 origin instead of website hosting URL |
+| React app doesn’t load              | You uploaded the `build/` folder instead of its **contents** |
+| CORS errors in frontend             | You didn’t handle OPTIONS requests in Lambda |
+| Bedrock returns access denied       | IAM role lacks `bedrock:InvokeModel` permission or model isn’t enabled |
+| SES fails to send                   | Still in sandbox — verify recipient or request production access |
 
 ---
 
-## Final Deployment Checklist
+## ✅ Final Deployment Checklist
 
-- [x] React frontend deployed via S3 + CloudFront
-- [x] Subscribe + Unsubscribe endpoints deployed
-- [x] Lambdas connected to API Gateway
+- [x] React frontend deployed on S3 + CloudFront
+- [x] Backend APIs created via Lambda + API Gateway
 - [x] CORS handled inside Lambda
 - [x] DynamoDB table created
-- [x] Daily trigger scheduled via EventBridge
 - [x] Claude model access confirmed
-- [x] Emails sent via verified SES sender
-- [x] Unsubscribe deletes record from DynamoDB
+- [x] EventBridge schedule configured
+- [x] SES verified sender used
+- [x] Unsubscribe fully working
 
 ---
 
-##  GitHub Repo
+## 📌 GitHub Repo
 
-➡️ https://github.com/yeluru/stockpulse-ai-agent
+➡️ [https://github.com/yeluru/stockpulse-ai-agent](https://github.com/yeluru/stockpulse-ai-agent)
