@@ -1,4 +1,10 @@
-# 📈 StockPulse AI Agent (MVP)
+# 🚀 Build a Serverless AI Agent Using AWS resources including Bedrock— End to End
+
+You’ve probably heard about Amazon Bedrock by now. AWS’s new fully managed service lets you tap into powerful foundation models like Claude, Titan, and Jurassic — without managing GPUs, infrastructure, or model hosting. 
+
+If you’ve been curious about Amazon Bedrock, this project is for you. We’re going to build a real AI agent — not a chatbot, but an automated reasoning system that pulls live stock data, analyzes news headlines, generates daily recommendations using Claude, and delivers personalized insights to users via email. And we’ll do it entirely serverless: no backend servers, no EC2, no provisioning — just S3, Lambda, API Gateway, DynamoDB, EventBridge, and SES working together. Bedrock lets us tap into cutting-edge LLMs with zero infrastructure, and serverless architecture ensures we only pay for what we use. The result? A production-grade AI agent that runs daily, scales on demand, and is cheap, elegant, and surprisingly easy to deploy. By the end, you’ll understand how to wire Bedrock into a full-stack system, build a clean user experience, and ship something you’d be proud to show your future self.
+
+## 📈 StockPulse AI Agent (MVP)
 
 StockPulse is a **fully serverless AI-powered stock research agent**. It uses Amazon Bedrock to generate AI insights, allows users to subscribe to their favorite stocks, and emails them daily AI-generated summaries using Claude.
 
